@@ -70,20 +70,23 @@ function ipfsServer (req, res) {
     return cb(403, 'Forbidden')
 
   // validate request
-  var hostMatch = /ipfs:\/([0-9a-z]+)/i.exec(queryParams.url)
+  var hostMatch = /ipfs:\/([a-z]+)\/([0-9a-z]+)/i.exec(queryParams.url)
   if (!hostMatch)
     return cb(404, 'Invalid URL')
+  var lookupMode = hostMatch[1]
+  var folderKey = hostMatch[2]
+  var reqPath = queryParams.url.slice(hostMatch[0].length)
+  if (lookupMode != 'ipfs')
+    return cb(404, 'Sorry, '+lookupMode+' is not supported yet. You must use "ipfs" only.')
   if (req.method != 'GET')
     return cb(405, 'Method Not Supported')
-  var folderKey = hostMatch[1]
-  var reqPath = queryParams.url.slice(hostMatch[0].length)
 
   // redirect if no path, otherwise sub-resource requests will fail
   if (reqPath == '') {
     // header-redirects crash electron (https://github.com/electron/electron/issues/6492)
     // use this instead, for now
     res.writeHead(200, 'OK', { 'Content-Type': 'text/html', 'Content-Security-Policy': CSP })
-    res.end('<meta http-equiv="refresh" content="0;URL=ipfs:/'+folderKey+'/">')
+    res.end('<meta http-equiv="refresh" content="0;URL=ipfs:/ipfs/'+folderKey+'/">')
   }
 
   // stateful vars that may need cleanup
