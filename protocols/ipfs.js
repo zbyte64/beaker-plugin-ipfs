@@ -76,6 +76,8 @@ function ipfsServer (req, res) {
   var lookupMode = hostMatch[1]
   var folderKey = hostMatch[2]
   var reqPath = queryParams.url.slice(hostMatch[0].length)
+  if (reqPath.indexOf('#') !== -1) // strip out the hash segment
+    reqPath = reqPath.slice(0, reqPath.indexOf('#'))
   if (lookupMode != 'ipfs')
     return cb(404, 'Sorry, '+lookupMode+' is not supported yet. You must use "ipfs" only.')
   if (req.method != 'GET')
