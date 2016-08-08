@@ -1,6 +1,6 @@
 {
   "name": "beaker-plugin-ipfs",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "IPFS-protocol plugin for the Beaker browser",
   "main": "index.js",
   "scripts": {
