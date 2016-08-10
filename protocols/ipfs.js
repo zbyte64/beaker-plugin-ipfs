@@ -104,18 +104,18 @@ function ipfsServer (req, res) {
   req.once('aborted', () => {
     aborted = true
     cleanup()
-    log.debug('Request aborted by client')
+    log.debug('[IPFS] Request aborted by client')
   })
 
   // setup a timeout
   timeout = setTimeout(() => {
     if (aborted) return
-    log.debug('Timed out searching for', folderKey)
+    log.debug('[IPFS] Timed out searching for', folderKey)
     cb(408, 'Timed out')
   }, REQUEST_TIMEOUT_MS)
 
     // list folder contents
-  log.debug('Attempting to list folder', folderKey)
+  log.debug('[IPFS] Attempting to list folder', folderKey)
   ipfs.lookupLink(folderKey, reqPath, (err, link) => {
     if (aborted)
       return
@@ -130,12 +130,12 @@ function ipfsServer (req, res) {
       // QUESTION: should there be a more specific error response?
       // not sure what kind of failures can occur here (other than broken pipe)
       // -prf
-      log.debug('Folder listing errored', err)
+      log.debug('[IPFS] Folder listing errored', err)
       return cb(500, 'Failed')
     }
 
     // fetch the data
-    log.debug('Link found:', reqPath || link.name)
+    log.debug('[IPFS] Link found:', reqPath || link.name)
     ipfs.getApi().object.data(link.hash, (err, marshaled) => {
       if (aborted)
         return
@@ -143,7 +143,7 @@ function ipfsServer (req, res) {
 
       if (err) {
         // TODO: what's the right error for this?
-        log.debug('Data fetch failed', err)
+        log.debug('[IPFS] Data fetch failed', err)
         return cb(500, 'Failed')
       }
 
@@ -157,13 +157,13 @@ function ipfsServer (req, res) {
       if (identifiedExt)
         mimeType = mime.lookup(identifiedExt)
       if (mimeType)
-        log.debug('Identified entry mimetype as', mimeType)
+        log.debug('[IPFS] Identified entry mimetype as', mimeType)
       else {
         // fallback to using the entry name
         mimeType = mime.lookup(link.name)
         if (mimeType == 'application/octet-stream')
           mimeType = 'text/plain' // TODO look if content is textlike?
-        log.debug('Assumed mimetype from link name', mimeType)
+        log.debug('[IPFS] Assumed mimetype from link name', mimeType)
       }
 
       res.writeHead(200, 'OK', {

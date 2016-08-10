@@ -21,12 +21,11 @@ module.exports = {
 app.on('ready', () => ipfsNetwork.setup())
 app.once('will-quit', () => ipfsNetwork.shutdown())
 
-// plug the logger to prepend [IPFS] to all messages
-// also add support for spread args
+// plug the logger to support spread args
 var originalFactory = log.methodFactory
 log.methodFactory = function (methodName, logLevel, loggerName) {
   var rawMethod = originalFactory(methodName, logLevel, loggerName)
-  return (...message) => rawMethod("[IPFS] " + message.map(stringifyIfNeeded).join(' '))
+  return (...message) => rawMethod(message.map(stringifyIfNeeded).join(' '))
 }
 function stringifyIfNeeded (obj) {
   if (obj && typeof obj == 'object')
