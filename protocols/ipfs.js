@@ -70,7 +70,7 @@ function ipfsServer (req, res) {
     return cb(403, 'Forbidden')
 
   // validate request
-  var hostMatch = /ipfs:(\/[a-z]+\/[0-9a-z]+)/i.exec(queryParams.url)
+  var hostMatch = /ipfs:(\/[a-z]+\/[0-9a-zA-Z-.]+)/i.exec(queryParams.url)
   if (!hostMatch)
     return cb(404, 'Invalid URL')
   var folderKey = hostMatch[1]
