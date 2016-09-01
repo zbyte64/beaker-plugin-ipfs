@@ -62,6 +62,12 @@ function ipfsServer (req, res) {
     res.writeHead(code, status, { 'Content-Type': 'text/html', 'Content-Security-Policy': "default-src 'unsafe-inline';" })
     res.end(errorPage(code + ' ' + status))
   })
+  function redirectToFolder () {
+    // header-redirects crash electron (https://github.com/electron/electron/issues/6492)
+    // use this instead, for now
+    res.writeHead(200, 'OK', { 'Content-Type': 'text/html', 'Content-Security-Policy': CSP })
+    res.end('<meta http-equiv="refresh" content="0;URL=ipfs:'+folderKey+reqPath+'/">')    
+  }
   var queryParams = url.parse(req.url, true).query
 
   // check the nonce
@@ -81,12 +87,8 @@ function ipfsServer (req, res) {
     return cb(405, 'Method Not Supported')
 
   // redirect if no path, otherwise sub-resource requests will fail
-  if (reqPath == '') {
-    // header-redirects crash electron (https://github.com/electron/electron/issues/6492)
-    // use this instead, for now
-    res.writeHead(200, 'OK', { 'Content-Type': 'text/html', 'Content-Security-Policy': CSP })
-    res.end('<meta http-equiv="refresh" content="0;URL=ipfs:'+folderKey+'/">')
-  }
+  if (reqPath == '')
+    return redirectToFolder()
 
   // stateful vars that may need cleanup
   var timeout
@@ -119,8 +121,23 @@ function ipfsServer (req, res) {
     if (err) {
       cleanup()
 
-      if (err.notFound)
+      if (err.notFound) {
+        // if we're looking for a directory, just give a file listing
+        if (Array.isArray(err.links) && reqPath.charAt(reqPath.length - 1) == '/') {
+          res.writeHead(200, 'OK', {
+            'Content-Type': 'text/html',
+            'Content-Security-Policy': CSP
+          })
+          var upLink = (reqPath == '/') ? '' : `<p><a href="..">..</a></p>`
+          res.end(`<h1>File listing for ${reqPath}</h1>`+upLink+err.links.map(link => {
+            if (!link.name) return ''
+            return `<p><a href="./${link.name}">${link.name}</a></p>`
+          }).join(''))
+          return
+        }
+
         return cb(404, 'File Not Found')
+      }
       if (err.notReady)
         return cb(500, 'IPFS Daemon not yet ready. Try again in a few seconds.')
 
@@ -132,7 +149,7 @@ function ipfsServer (req, res) {
     }
 
     // fetch the data
-    log.debug('[IPFS] Link found:', reqPath || link.name)
+    log.debug('[IPFS] Link found:', reqPath || link.name, link)
     ipfs.getApi().object.data(link.hash, (err, marshaled) => {
       if (aborted)
         return
@@ -147,6 +164,10 @@ function ipfsServer (req, res) {
       // parse the data
       var unmarshaled = Unixfs.unmarshal(marshaled)
       var data = unmarshaled.data
+
+      // directory? redirect with a '/' appended
+      if (unmarshaled.type == 'directory')
+        return redirectToFolder()
       
       // try to identify the type by the buffer contents
       var mimeType
