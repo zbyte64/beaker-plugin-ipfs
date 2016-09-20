@@ -19,7 +19,7 @@ module.exports = {
 // =
 
 // register some events to control the network lifecycle
-app.on('ready', () => ipfsNetwork.setup(path.join(app.getPath('userData'), 'IPFS')))
+app.on('ready', () => ipfsNetwork.setup())
 app.once('will-quit', () => ipfsNetwork.shutdown())
 
 // plug the logger to support spread args
