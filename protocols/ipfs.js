@@ -75,6 +75,12 @@ function ipfsServer (req, res) {
   if (queryParams.nonce != requestNonce)
     return cb(403, 'Forbidden')
 
+  // check if we have the daemon
+  if (!ipfs.getApi()) {
+    ipfs.setup() // try to setup the daemon
+    return cb(500, 'IPFS Daemon not found. Start the daemon and try again.')
+  }
+
   // validate request
   var hostMatch = /ipfs:(\/[a-z]+\/[0-9a-zA-Z-.]+)/i.exec(queryParams.url)
   if (!hostMatch)
@@ -138,8 +144,10 @@ function ipfsServer (req, res) {
 
         return cb(404, 'File Not Found')
       }
-      if (err.notReady)
-        return cb(500, 'IPFS Daemon not yet ready. Try again in a few seconds.')
+      if (err.notReady) {
+        ipfs.setup() // try to setup the daemon
+        return cb(500, 'IPFS Daemon not found. Start the daemon and try again.')
+      }
 
       // QUESTION: should there be a more specific error response?
       // not sure what kind of failures can occur here (other than broken pipe)
