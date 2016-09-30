@@ -33,4 +33,4 @@ function stringifyIfNeeded (obj) {
     return JSON.stringify(obj)
   return obj
 }
-log.setLevel('trace')
+log.setLevel(process.env.beaker_log_level || 'warn')
