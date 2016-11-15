@@ -22,9 +22,9 @@
   "homepage": "https://github.com/pfrazee/beaker-plugin-ipfs#readme",
   "dependencies": {
     "identify-filetype": "^1.0.0",
-    "ipfs-api": "^6.0.3",
-    "ipfs-unixfs": "^0.1.4",
-    "ipfsd-ctl": "^0.14.0",
+    "ipfs-api": "^11.1.0",
+    "ipfs-unixfs": "^0.1.5",
+    "ipfsd-ctl": "^0.17.0",
     "is-ipfs": "^0.2.0",
     "listen-random-port": "^1.0.0",
     "loglevel": "^1.4.1",
